@@ -1,0 +1,7 @@
+.gitsecret/keys/random_seed
+!*.secret
+config.ini
+Rendu
+Diagrammes.drawio
+infos.txt
+.DS_Store
