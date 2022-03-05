@@ -22,10 +22,6 @@ vcsa_token = sys.argv[1]
 vcsa_element = sys.argv[2]
 vcsa_action = sys.argv[3]
 
-print(vcsa_token)
-print(vcsa_element)
-print(vcsa_action)
-
 
 def api_makerequest(url, token, method="GET", aditionnals_headers={}):
     request_headers = {
