@@ -3,7 +3,8 @@ Setup:
 # Install-Module -Name VMware.PowerCLI -Scope CurrentUser
 # Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP $false -Confirm:$false
 
-
+# Usage:
+# pwsh script.ps1 username
 $username = $args[0]
 
 $config = Get-IniContent "config.ini"
