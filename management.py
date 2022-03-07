@@ -11,7 +11,7 @@ parser = ConfigParser()
 parser.read('config.ini')
 
 global vcsa_url
-vcsa_url = parser.get("VCSA", "vcsa_url")
+vcsa_url = "https://"+parser.get("VCSA", "vcsa_url")
 
 if (len(sys.argv) < 4):
     print("Error, missing arguments")
