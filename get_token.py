@@ -15,7 +15,7 @@ if (len(sys.argv) < 2):
     print('Args required: python3 script.py "VCSA Username" "VCSA Password"')
     exit(1)
 
-vcsa_url = parser.get("VCSA", "vcsa_url")
+vcsa_url = "https://"+parser.get("VCSA", "vcsa_url")
 vcsa_username = sys.argv[1]
 vcsa_password = sys.argv[2]
 
@@ -35,6 +35,7 @@ def api_getkey(url, id, password):
 def user_folder_created(token, username):
     folders = requests.get(vcsa_url+"/rest/vcenter/folder",
                            verify=False, headers={"vmware-api-session-id": token})
+    folders = json.loads(folders.text)
     if "type" in folders.keys():
         if folders['type'] == "com.vmware.vapi.std.errors.internal_server_error":
             return False

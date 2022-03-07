@@ -22,7 +22,6 @@ vcsa_token = sys.argv[1]
 vcsa_element = sys.argv[2]
 vcsa_action = sys.argv[3]
 
-
 def api_makerequest(url, token, method="GET", aditionnals_headers={}):
     request_headers = {
         "vmware-api-session-id": token
@@ -160,4 +159,11 @@ def user_delete_vm(token, id):
     else:
         return {"success": False, "message": "Bad / Missing token"}
 
+
+def user_vm_create(token, name):
+
+
+
 # print(json.dumps(user_folder_created(user_token, vcsa_username), indent=2))
+
+# New-VM -Name 'W10-001' -Template $(Get-Template -Name "W10-Template")  -OSCustomizationSpec $(Get-OSCustomizationSpec -Name "W10-Clients") -VMHost $(Get-Folder "Clients") -Datastore 'VMs'
