@@ -1,8 +1,3 @@
-# Setup:
-# Install-Module PsIni
-# Install-Module -Name VMware.PowerCLI -Scope CurrentUser
-# Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP $false -Confirm:$false
-
 # Usage:
 # pwsh script.ps1 username
 $username = $args[0]
@@ -16,6 +11,7 @@ Set-PowerCLIConfiguration -InvalidCertificateAction ignore -Confirm:$false | out
 
 Connect-VIServer -Server $vcsa_url -User $vcsa_admin_username -Password $vcsa_admin_password | out-null
 
-New-Folder -Name $username -Location (Get-Folder "Clients") | out-null
+New-Folder -Name $username -Location $(Get-Folder "Clients") | out-null
 
-Get-Folder $username | New-VIPermission -Role 'VirtualMachinePowerUser' -Principal "CLOUDIS\$($username)" | out-null
+Get-Folder $username | New-VIPermission -Role 'Domain_Users' -Principal "CLOUDIS\$($username)" | out-null
+
