@@ -1,33 +1,46 @@
-# Usage:
-# pwsh script.ps1 -vcsa_username USER -vcsa_password PASS -vm_name NAME [opt] -vm_ip IP [opt] -vm_netmask MASK [opt] -vm_gateway GW_IP  [opt] -vm_dns DNS_IP
-param ($vcsa_username, $vcsa_password, $vm_name, $vm_ip="0.0.0.0", $vm_netmask="0.0.0.0", $vm_gateway="0.0.0.0", $vm_dns="0.0.0.0")
+# ./create-vm.ps1 -vcsa_username j.dupont@cloudis-girard-presse.lan -vcsa_password Passw0rd. -vm_name "W10-Test-001-dupont" -vm_ip "192.168.5.150" -vm_gateway "192.168.5.254" -vm_dns "1.1.1.1"
+param ($vcsa_username, $vcsa_password, $vm_name, $vm_ip="192.168.254.253", $vm_gateway="192.168.254.254", $vm_dns="1.1.1.1")
 
-if ( ($vcsa_username -eq $null) -or ($vcsa_password -eq $null) -or ($vm_name -eq $null) -or ($vm_ip -eq $null) -or ($vm_netmask -eq $null)){
+if ( ($vcsa_username -eq $null) -or ($vcsa_password -eq $null) -or ($vm_name -eq $null) -or ($vm_ip -eq $null)) {
         Write-Host "Missing Args"
-        Write-Host "./script.ps1 -vcsa_username USER -vcsa_password PASS -vm_name NAME [opt] -vm_ip IP [opt] -vm_netmask MASK [opt] -vm_gateway GW_IP  [opt] -vm_dns DNS_IP"
+        Write-Host "./script.ps1 -vcsa_username USER -vcsa_password PASS -vm_name NAME [opt] -vm_ip IP [opt] -vm_gateway = GW [opt] -vm_dns = DNS"
         exit 1
 }
 
-$pos = $vcsa_username.IndexOf("@")
-$base_spec = "W10-Clients"
-$template = "W10-Template"
-$location = $vcsa_username.Substring(0, $pos)
-$datastore = "VMs"
-$res_pool = "Cloudis-Cluster"
-
-
-$config = Get-IniContent "config.ini"
 $vcsa_url = $config["VCSA"]["vcsa_url"]
 
 Set-PowerCLIConfiguration -InvalidCertificateAction ignore -Confirm:$false | out-null
 Connect-VIServer -Server $vcsa_url -User $vcsa_username -Password $vcsa_password | out-null
 
-Get-OSCustomizationSpec -name $base_spec | New-OSCustomizationSpec -Name tempcust | out-null
-Get-OSCustomizationSpec -Name tempcust | Get-OSCustomizationNicMapping | where {$_.Position -eq 2} | Set-OSCustomizationNicMapping -IpMode UseStaticIP -IpAddress $vm_ip -SubnetMask $vm_netmask -DefaultGateway $vm_gateway -Dns $vm_dns | out-null
-$final_cust = Get-OSCustomizationSpec -Name tempcust | out-null
 
-New-VM -Name $vm_name -Template $template -OSCustomizationSpec $final_cust -Location $location -Datastore $datastore -ResourcePool $res_pool
+$pos = $vcsa_username.IndexOf("@")
+$uname = $vcsa_username.Substring(0, $pos)
+$template = Get-Template -Name "W10-Template"
+$base_spec = "W10-Clients"
+$datastore = "VMs"
+$res_pool = "Cloudis-Cluster"
+$config = Get-IniContent "config.ini"
 
-Remove-OSCustomizationSpec tempcust -Confirm:$false | out-null
 
-# ./create-vm.ps1 -vcsa_username j.marie@cloudis-girard-presse.lan -vcsa_password Passw0rd. -vm_name "W10 - 001" -vm_ip 172.16.7.1 -vm_netmask 255.255.255.0  -vm_gateway 172.16.7.254 -vm_dns 172.16.10.250
+$spec_clone = Get-OSCustomizationSpec -Name W10-Clients | New-OSCustomizationSpec -Name WindowsTemp -Type NonPersistent
+
+$nicMapping = Get-OSCustomizationNicMapping –OSCustomizationSpec $spec_clone | Where { $_.position -eq 2 }
+
+$nicMapping | Set-OSCustomizationNicMapping –IpMode UseStaticIP –IpAddress $vm_ip –SubnetMask “255.255.255.0” –DefaultGateway $vm_gateway -Dns $vm_dns
+
+$vm_task = New-VM -Name $vm_name -Template $template -OSCustomizationSpec WindowsTemp -ResourcePool $res_pool -Datastore $datastore -DiskStorageFormat Thin -Location $uname -RunAsync
+
+$task_id = $vm_task.id
+
+while ($vm_task.PercentComplete -lt 100)
+{
+    Start-Sleep -Seconds 2
+    $vm_task = Get-Task -Id $task_id
+}
+
+
+Remove-OSCustomizationSpec WindowsTemp -Confirm:$false | out-null
+
+Get-VM $vm_name | Get-NetworkAdapter -Name "Network adapter 2" | Set-NetworkAdapter -NetworkName $uname -Confirm:$false -StartConnected:$True | out-null
+
+$vm = Start-VM $vm_name -Confirm:$false | out-null
