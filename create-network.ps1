@@ -14,7 +14,6 @@ $vcsa_admin_password = $config["VCSA"]["vcsa_admin_password"]
 $pos = $username.IndexOf("@")
 $network = $username.Substring(0, $pos)
 
-
 Set-PowerCLIConfiguration -InvalidCertificateAction ignore -Confirm:$false | out-null
 Connect-VIServer -Server $vcsa_url -User $vcsa_admin_username -Password $vcsa_admin_password | out-null
 

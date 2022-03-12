@@ -52,6 +52,7 @@ def user_create_folder(username):
 
 
 user_login = api_getkey(vcsa_url, vcsa_username, vcsa_password)
+
 if(user_login['success']):
     user_token = user_login['message']
 

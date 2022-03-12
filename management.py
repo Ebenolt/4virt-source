@@ -4,6 +4,7 @@ import urllib3
 import time
 import sys
 from configparser import ConfigParser
+import subprocess
 
 urllib3.disable_warnings()
 
@@ -13,14 +14,14 @@ parser.read('config.ini')
 global vcsa_url
 vcsa_url = "https://"+parser.get("VCSA", "vcsa_url")
 
-if (len(sys.argv) < 4):
-    print("Error, missing arguments")
-    print('Args required: python3 script.py "VCSA token" "element" "action"')
-    exit(1)
+# if (len(sys.argv) < 4):
+#     print("Error, missing arguments")
+#     print('Args required: python3 script.py "VCSA token" "element" "action"')
+#     exit(1)
 
-vcsa_token = sys.argv[1]
-vcsa_element = sys.argv[2]
-vcsa_action = sys.argv[3]
+# vcsa_token = sys.argv[1]
+# vcsa_element = sys.argv[2]
+# vcsa_action = sys.argv[3]
 
 def api_makerequest(url, token, method="GET", aditionnals_headers={}):
     request_headers = {
@@ -139,7 +140,6 @@ def user_suspend_vm(token, id):
 
         return vm_suspend
 
-
 def user_delete_vm(token, id):
     if(user_valid_token(token)):
         vm_detail = api_makerequest(vcsa_url+"/rest/vcenter/vm/"+id, token)
@@ -159,10 +159,21 @@ def user_delete_vm(token, id):
     else:
         return {"success": False, "message": "Bad / Missing token"}
 
+def powershell_setup():
+    script = subprocess.Popen(["pwsh","./setup.ps1"])
 
-def user_vm_create(token, name):
+def user_setup(username):
+    script = subprocess.Popen(["pwsh","./create-folder.ps1", username])
+    script = subprocess.Popen(["pwsh","./create-network.ps1", username])
+
+def user_vm_create(username, password, vm_name, vm_ip="253", vm_gateway="254", vm_dns="1.1.1.1"):
+    script = subprocess.Popen(["pwsh","./create-vm.ps1",username,password,vm_name,vm_ip,vm_gateway,vm_dns])
 
 
+# powershell_setup()
+# user_vm_create("j.marie@cloudis-girard-presse.lan", "Passw0rd.", "marie-python-vm" ,"150", "254", "8.8.8.8")
+
+print(json.dumps(user_get_vms("2b2f8fe9b54a45fed515a157c5e9e140"),indent=2))
 
 # print(json.dumps(user_folder_created(user_token, vcsa_username), indent=2))
 

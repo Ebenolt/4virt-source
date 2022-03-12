@@ -17,4 +17,6 @@ $network = $username.Substring(0, $pos)
 Set-PowerCLIConfiguration -InvalidCertificateAction ignore -Confirm:$false | out-null
 Connect-VIServer -Server $vcsa_url -User $vcsa_admin_username -Password $vcsa_admin_password | out-null
 
+
+
 New-NetworkAdapter -vm $vm_name -Portgroup $network -Type "VMXNET3" -startconnected | out-null
