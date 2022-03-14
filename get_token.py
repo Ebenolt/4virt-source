@@ -1,3 +1,5 @@
+# Usage: python3 script.py username@domain password
+# Get API Token and call PS to setup user folder / network
 import requests
 import json
 import urllib3
@@ -47,19 +49,34 @@ def user_folder_created(token, username):
         return False
 
 
-def user_create_folder(username):
-    subprocess.call(["pwsh", "create-folder.ps1", username])
+def user_setup(username):
+    subprocess.call(["pwsh", "./sub-scripts/user-setup.ps1", username], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
 
 
 user_login = api_getkey(vcsa_url, vcsa_username, vcsa_password)
+
 
 if(user_login['success']):
     user_token = user_login['message']
 
     if not(user_folder_created(user_token, vcsa_username)):
-        user_create_folder("j.marie")
+        user_setup(vcsa_username)
 
-    print("{'success' : True, 'message':"+user_token+"}")
+    result = {
+        "success": True, 
+        "message": {
+            "token": user_token, 
+            "username": vcsa_username,
+            "password": vcsa_password,
+        }
+    }
+    print(json.dumps(result))
+
 else:
-    print("{'success' : False, 'message':'Bad user-token, account not found / bad credentials'}")
+    result = {
+        "success": False, 
+        "message": "Bad user-token, account not found / bad credentials"
+    }
+    print(json.dumps(result))
     exit(1)

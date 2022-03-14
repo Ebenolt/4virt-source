@@ -1,12 +1,63 @@
+# Usage: python3 script.py username@domain password
+# Central management script
+
 import requests
 import json
 import urllib3
 import time
 import sys
+import getopt
 from configparser import ConfigParser
 import subprocess
-
 urllib3.disable_warnings()
+
+
+vcsa_username = ''
+vcsa_password = ''
+vcsa_token = ''
+element_id = ''
+action = ''
+
+vm_name = ''
+vm_ip = ''
+vm_gateway = ''
+vm_dns = ''
+
+howto = 'script.py --username(-u) <vcsa_username> --password(-p) <vcsa_password> --token(-t) <vcsa_token> --action(-a) <action> --element(-e) <element_id>'
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:],"hu:p:t:a:e:n:i:g:d:",["username=","password=", "token=", "action=", "id=", "vm_name=", "vm_ip=", "vm_gateway=", "vm_dns="])
+
+except getopt.GetoptError:
+    print (howto)
+    sys.exit(2)
+for opt, arg in opts:
+    if opt == '-h':
+        print (howto)
+        sys.exit()
+    elif opt in ("-u", "--username"):
+        vcsa_username = arg
+    elif opt in ("-p", "--password"):
+        vcsa_password = arg
+    elif opt in ("-t", "--token"):
+        vcsa_token = arg
+    elif opt in ("-a", "--action"):
+        action = arg
+    elif opt in ("-e", "--element"):
+        element_id = arg
+    elif opt in ("-n", "--vm_name"):
+        vm_name = arg
+    elif opt in ("-i", "--vm_ip"):
+        vm_ip = arg
+    elif opt in ("-g", "--vm_gateway"):
+        vm_gateway = arg
+    elif opt in ("-d", "--vm_dns"):
+        vm_dns = arg
+
+if ( '' in [vcsa_username, vcsa_password, vcsa_token, action] ):
+    print("Missing args, usage:")
+    print(howto)
+    exit(1)
 
 parser = ConfigParser()
 parser.read('config.ini')
@@ -14,14 +65,6 @@ parser.read('config.ini')
 global vcsa_url
 vcsa_url = "https://"+parser.get("VCSA", "vcsa_url")
 
-# if (len(sys.argv) < 4):
-#     print("Error, missing arguments")
-#     print('Args required: python3 script.py "VCSA token" "element" "action"')
-#     exit(1)
-
-# vcsa_token = sys.argv[1]
-# vcsa_element = sys.argv[2]
-# vcsa_action = sys.argv[3]
 
 def api_makerequest(url, token, method="GET", aditionnals_headers={}):
     request_headers = {
@@ -57,6 +100,11 @@ def user_valid_token(token):
     else:
         return True
 
+def powershell_setup():
+    script = subprocess.Popen(["pwsh","./setup.ps1"])
+
+def user_setup(username):
+    script = subprocess.Popen(["pwsh","./user-setup.ps1", username])
 
 def user_get_vms(token):
     if(user_valid_token(token)):
@@ -79,15 +127,16 @@ def user_get_vms(token):
                         "last_backup": "",
                         "networks": []}
             for net in vm_detail['value']['nics']:
-                vm_infos['networks'].append(
-                    net['value']['backing']['network_name'])
+                try:
+                    vm_infos['networks'].append(net['value']['backing']['network_name'])
+                except:
+                    pass
             vms_list.append(vm_infos)
 
         result = vms_list
         return result
     else:
         return {"success": False, "message": "Bad / Missing token"}
-
 
 def user_stop_vm(token, id):
     if(user_valid_token(token)):
@@ -101,7 +150,6 @@ def user_stop_vm(token, id):
 
         return vm_stop
 
-
 def user_start_vm(token, id):
     if(user_valid_token(token)):
         vm_start = api_makerequest(vcsa_url+"/rest/vcenter/vm/"+id+"/power/start",
@@ -114,7 +162,6 @@ def user_start_vm(token, id):
 
         return vm_start
 
-
 def user_reset_vm(token, id):
     if(user_valid_token(token)):
         vm_reset = api_makerequest(vcsa_url+"/rest/vcenter/vm/"+id+"/power/reset",
@@ -126,7 +173,6 @@ def user_reset_vm(token, id):
                 return {"success": False, "message": vm_reset['value']['messages'][0]['default_message']}
 
         return vm_reset
-
 
 def user_suspend_vm(token, id):
     if(user_valid_token(token)):
@@ -159,22 +205,46 @@ def user_delete_vm(token, id):
     else:
         return {"success": False, "message": "Bad / Missing token"}
 
-def powershell_setup():
-    script = subprocess.Popen(["pwsh","./setup.ps1"])
-
-def user_setup(username):
-    script = subprocess.Popen(["pwsh","./create-folder.ps1", username])
-    script = subprocess.Popen(["pwsh","./create-network.ps1", username])
-
 def user_vm_create(username, password, vm_name, vm_ip="253", vm_gateway="254", vm_dns="1.1.1.1"):
-    script = subprocess.Popen(["pwsh","./create-vm.ps1",username,password,vm_name,vm_ip,vm_gateway,vm_dns])
+    script = subprocess.Popen(["pwsh","./sub-scripts/create-vm.ps1",username,password,vm_name,vm_ip,vm_gateway,vm_dns], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
-# powershell_setup()
-# user_vm_create("j.marie@cloudis-girard-presse.lan", "Passw0rd.", "marie-python-vm" ,"150", "254", "8.8.8.8")
-
-print(json.dumps(user_get_vms("2b2f8fe9b54a45fed515a157c5e9e140"),indent=2))
-
-# print(json.dumps(user_folder_created(user_token, vcsa_username), indent=2))
-
-# New-VM -Name 'W10-001' -Template $(Get-Template -Name "W10-Template")  -OSCustomizationSpec $(Get-OSCustomizationSpec -Name "W10-Clients") -VMHost $(Get-Folder "Clients") -Datastore 'VMs'
+if action == "get":
+    print(json.dumps(user_get_vms(vcsa_token)))
+elif action in ["stop", "start", "reset", "suspend", "delete"]:
+    if element_id == "":
+        result = {"success": False,
+            "message": "Missing arg --id(-i)",
+            "howto":howto
+            }
+        print(json.dumps(result))
+    else:
+        if action == "start":
+            print(json.dumps(user_start_vm(vcsa_token, element_id)))
+        elif action == "stop":
+            print(json.dumps(user_stop_vm(vcsa_token, element_id)))
+        elif action == "reset":
+            print(json.dumps(user_reset_vm(vcsa_token, element_id)))
+        elif action == "suspend":
+            print(json.dumps(user_suspend_vm(vcsa_token, element_id)))
+        elif action == "delete":
+            print(json.dumps(user_delete_vm(vcsa_token, element_id)))
+elif action == "create":
+    if "" in [vm_name, vm_ip, vm_gateway, vm_dns]:
+        result = {"success": False,
+            "message": "Missing args",
+            "howto":howto[:-26] + "--vm_name(-n) <vm_name> --vm_ip(-i) <vm_last_ip_block> --vm_gateway(-g) <gateway_last_ip_block> --vm_dns(-d) <dns_ip>"
+            }
+        print(json.dumps(result))
+    else:
+        user_vm_create(vcsa_username, vcsa_password, vm_name ,vm_ip, vm_gateway, vm_dns)
+        result = {"success": True,
+            "message": "VM Created !"
+            }
+        print(json.dumps(result))
+else:
+    result = {"success": False,
+                "message": "Action arg not recognized (start, stop, reset, suspend, delete, create)",
+                "howto":howto
+                }
+    print(json.dumps(result))
