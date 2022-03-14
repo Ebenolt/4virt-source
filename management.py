@@ -133,7 +133,7 @@ def user_get_vms(token):
                     pass
             vms_list.append(vm_infos)
 
-        result = vms_list
+        result = {"success":True, "message":vms_list}
         return result
     else:
         return {"success": False, "message": "Bad / Missing token"}
@@ -207,6 +207,7 @@ def user_delete_vm(token, id):
 
 def user_vm_create(username, password, vm_name, vm_ip="253", vm_gateway="254", vm_dns="1.1.1.1"):
     script = subprocess.Popen(["pwsh","./sub-scripts/create-vm.ps1",username,password,vm_name,vm_ip,vm_gateway,vm_dns], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    return {"success": True, "message": "VM Created !"}
 
 
 if action == "get":
@@ -237,10 +238,7 @@ elif action == "create":
             }
         print(json.dumps(result))
     else:
-        user_vm_create(vcsa_username, vcsa_password, vm_name ,vm_ip, vm_gateway, vm_dns)
-        result = {"success": True,
-            "message": "VM Created !"
-            }
+        result = user_vm_create(vcsa_username, vcsa_password, vm_name ,vm_ip, vm_gateway, vm_dns)
         print(json.dumps(result))
 else:
     result = {"success": False,
