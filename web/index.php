@@ -18,13 +18,7 @@
 
             <button value="delete">Delete</button>
             <button value="restart">Restart</button>
-            <button value="add">Add</button>
-
-            <label for="modele">Modèle : </label>
-            <select id="modele">
-                <option value="">--Please choose an option--</option>
-                <option value="w10-Template">W10-Template</option>
-            </select>     
+            <button value="add">Add</button>    
         </div>
     </body>
 </html>
