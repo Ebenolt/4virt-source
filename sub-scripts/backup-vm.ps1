@@ -1,12 +1,12 @@
 # Save a user vm
-# ./script.ps1 -vcsa_username USER -vcsa_password PASS -vm_name VM
+# ./script.ps1 -vcsa_username USER -vcsa_password PASS -vm_id ID
 
 
-param ($vcsa_username, $vcsa_password, $vm_name)
+param ($vcsa_username, $vcsa_password, $vm_id)
 
-if ( ($vcsa_username -eq $null) -or ($vcsa_password -eq $null) -or ($vm_name -eq $null)) {
+if ( ($vcsa_username -eq $null) -or ($vcsa_password -eq $null) -or ($vm_id -eq $null)) {
         Write-Host "Missing Args"
-        Write-Host "./script.ps1 -vcsa_username USER -vcsa_password PASS -vm_name NAME"
+        Write-Host "./script.ps1 -vcsa_username USER -vcsa_password PASS -vm_id ID"
         exit 1
 }
 
@@ -23,7 +23,10 @@ $clone_name = "Clone-Snapshot"
 Set-PowerCLIConfiguration -InvalidCertificateAction ignore -Confirm:$false | out-null
 Connect-VIServer -Server $vcsa_url -User $vcsa_username -Password $vcsa_password | out-null
 
-$vm = Get-VM -Name $vm_name
+
+$vm = Get-VM -Id "VirtualMachine-$vm_id"
+$vm_name = $vm.name
+# $vm = Get-VM -Name $vm_name
 
 New-Snapshot -Name $clone_name -VM $vm_name -Confirm:$false -RunAsync
 
@@ -45,3 +48,5 @@ $cloneName = "bkp_$vm-$date-$time"
 $vmView.CloneVM( $cloneFolder, $cloneName, $cloneSpec )
 
 Get-Snapshot -VM (Get-VM -Name $vm_name) -Name $clone_name | Remove-Snapshot -confirm:$False -RunAsync
+
+Start-Process powershell mail.ps1 -subject Coucou -body "Test<br>Mail 123" -to me@ebenolt.com

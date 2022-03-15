@@ -235,8 +235,9 @@ def user_create_vm(username, password, vm_name, vm_ip="253", vm_gateway="254", v
     script = subprocess.Popen(["pwsh","./sub-scripts/create-vm.ps1",username,password,vm_name,vm_ip,vm_gateway,vm_dns], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     return {"success": True, "message": "VM created !"}
 
-def user_backup_vm(username, password, vm_name):
-    script = subprocess.Popen(["pwsh","./sub-scripts/backup-vm.ps1",username,password,vm_name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+def user_backup_vm(username, password, vm_id):
+    # script = subprocess.Popen(["pwsh","./sub-scripts/backup-vm.ps1",username,password,vm_name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    script = subprocess.Popen(["pwsh","./sub-scripts/backup-vm.ps1",username,password,vm_id])
     return {"success": True, "message": "VM backup success !"}
 
 
