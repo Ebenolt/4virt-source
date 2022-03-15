@@ -114,7 +114,7 @@ def user_get_vms(token):
                                         "status": "POWERED_ON",
                                         "cpu": 2, "ram": 10240,
                                         "ip": "192.168.11.30",
-                                        "last_backup": "",
+                                        "backups": [],
                                         "networks": [
                                             "VMs Management Network"
                                         ]
@@ -126,7 +126,12 @@ def user_get_vms(token):
                                         "cpu": 2,
                                         "ram": 3072,
                                         "ip": "Unknown",
-                                        "last_backup": "",
+                                        "backups": [
+                                            "15_03_2022-15:41:03",
+                                            "15_03_2022-15:43:21",
+                                            "15_03_2022-15:46:25",
+                                            "15_03_2022-16:17:41"
+                                        ],
                                         "networks": [
                                             "Public Network"
                                         ]

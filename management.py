@@ -54,6 +54,7 @@ for opt, arg in opts:
     elif opt in ("-d", "--vm_dns"):
         vm_dns = arg
 
+
 if ( '' in [vcsa_username, vcsa_password, vcsa_token, action] ):
     print("Missing args, usage:")
     print(howto)
@@ -110,29 +111,54 @@ def user_get_vms(token):
     if(user_valid_token(token)):
         vms = api_makerequest(vcsa_url+"/rest/vcenter/vm", token)
         vms_list = []
+        backup_list = {}
         for vm in vms['value']:
-            vm_detail = api_makerequest(
-                vcsa_url+"/rest/vcenter/vm/"+vm['vm'], token)
             try:
-                vm_ip = api_makerequest(
-                    vcsa_url+"/rest/vcenter/vm/"+vm['vm']+"/guest/identity/", token)['value']['ip_address']
-            except:
-                vm_ip = "Unknown"
-            vm_infos = {"id": vm['vm'],
-                        "name": vm_detail['value']['name'],
-                        "status": vm_detail['value']['power_state'],
-                        "cpu": vm['cpu_count'],
-                        "ram": vm['memory_size_MiB'],
-                        "ip": vm_ip,
-                        "last_backup": "",
-                        "networks": []}
-            for net in vm_detail['value']['nics']:
+                vm_detail = api_makerequest(
+                    vcsa_url+"/rest/vcenter/vm/"+vm['vm'], token)
                 try:
-                    vm_infos['networks'].append(net['value']['backing']['network_name'])
+                    vm_ip = api_makerequest(
+                        vcsa_url+"/rest/vcenter/vm/"+vm['vm']+"/guest/identity/", token)['value']['ip_address']
                 except:
-                    pass
-            vms_list.append(vm_infos)
+                    vm_ip = "Unknown"
+                
+                
+                if vm_detail['value']['name'][:3] == "bkp":
+                    name_split = vm_detail['value']['name'][3:].split("-")
+                    time = name_split[-1]
+                    date = name_split[-2]
+                    name_split.remove(time)
+                    name_split.remove(date)
 
+                    name_split[0] = name_split[0][1:]
+                    name = ("-").join(name_split)
+
+                    date = date[-2:]+"_"+date[-4:-2]+"_"+date[:4]
+                    if not(name in backup_list.keys()):
+                        backup_list[name] = []
+                    
+                    backup_list[name].append(date+"-"+time)
+                else:
+                    vm_infos = {"id": vm['vm'],
+                                "name": vm_detail['value']['name'],
+                                "status": vm_detail['value']['power_state'],
+                                "cpu": vm['cpu_count'],
+                                "ram": vm['memory_size_MiB'],
+                                "ip": vm_ip,
+                                "backups": [],
+                                "networks": []}
+                    for net in vm_detail['value']['nics']:
+                        try:
+                            vm_infos['networks'].append(net['value']['backing']['network_name'])
+                        except:
+                            pass
+                    vms_list.append(vm_infos)
+            except:
+                pass
+        for vm in vms_list:
+            if vm["name"] in backup_list.keys():
+                vm["backups"] = backup_list[vm["name"]]
+            
         result = {"success":True, "message":vms_list}
         return result
     else:
@@ -205,9 +231,13 @@ def user_delete_vm(token, id):
     else:
         return {"success": False, "message": "Bad / Missing token"}
 
-def user_vm_create(username, password, vm_name, vm_ip="253", vm_gateway="254", vm_dns="1.1.1.1"):
+def user_create_vm(username, password, vm_name, vm_ip="253", vm_gateway="254", vm_dns="1.1.1.1"):
     script = subprocess.Popen(["pwsh","./sub-scripts/create-vm.ps1",username,password,vm_name,vm_ip,vm_gateway,vm_dns], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    return {"success": True, "message": "VM Created !"}
+    return {"success": True, "message": "VM created !"}
+
+def user_backup_vm(username, password, vm_name):
+    script = subprocess.Popen(["pwsh","./sub-scripts/backup-vm.ps1",username,password,vm_name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    return {"success": True, "message": "VM backup success !"}
 
 
 if action == "get":
@@ -238,7 +268,17 @@ elif action == "create":
             }
         print(json.dumps(result))
     else:
-        result = user_vm_create(vcsa_username, vcsa_password, vm_name ,vm_ip, vm_gateway, vm_dns)
+        result = user_create_vm(vcsa_username, vcsa_password, vm_name ,vm_ip, vm_gateway, vm_dns)
+        print(json.dumps(result))
+elif action == "backup":
+    if element_id == "":
+        result = {"success": False,
+            "message": "Missing args",
+            "howto":howto
+            }
+        print(json.dumps(result))
+    else:
+        result = user_backup_vm(vcsa_username, vcsa_password, element_id)
         print(json.dumps(result))
 else:
     result = {"success": False,
