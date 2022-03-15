@@ -13,6 +13,7 @@ if ( ($vcsa_username -eq $null) -or ($vcsa_password -eq $null) -or ($vm_id -eq $
 
 $date = Get-Date -Format "yyyyMMdd"
 $time = Get-Date -f "HH:m:ss"
+$pretty_date = Get-Date -Format "dd-MM-yyyy"
 
 
 $config = Get-IniContent "config.ini"
@@ -26,7 +27,6 @@ Connect-VIServer -Server $vcsa_url -User $vcsa_username -Password $vcsa_password
 
 $vm = Get-VM -Id "VirtualMachine-$vm_id"
 $vm_name = $vm.name
-# $vm = Get-VM -Name $vm_name
 
 New-Snapshot -Name $clone_name -VM $vm_name -Confirm:$false -RunAsync
 
@@ -49,4 +49,4 @@ $vmView.CloneVM( $cloneFolder, $cloneName, $cloneSpec )
 
 Get-Snapshot -VM (Get-VM -Name $vm_name) -Name $clone_name | Remove-Snapshot -confirm:$False -RunAsync
 
-Start-Process powershell mail.ps1 -subject Coucou -body "Test<br>Mail 123" -to me@ebenolt.com
+& ./sub-scripts/mail.ps1 "VM Backup" "VM $vm_name has been backuped at $pretty_date / $time" me@ebenolt.com | out-null
