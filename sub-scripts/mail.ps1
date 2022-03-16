@@ -10,6 +10,9 @@ if ( ($subject -eq $null) -or ($body -eq $null) -or ($to -eq $null)) {
         exit 1
 }
 
+Import-Module PsIni
+
+
 $config = Get-IniContent "config.ini"
 $mail_username = $config["Mail"]["username"]
 $mail_password = $config["Mail"]["password"]

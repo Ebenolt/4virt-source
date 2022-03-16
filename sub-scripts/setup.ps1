@@ -1,3 +1,3 @@
-Install-Module PsIni
-Install-Module -Name VMware.PowerCLI -Scope CurrentUser
-Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP $false -Confirm:$false
+Install-Module PsIni -Scope AllUsers
+Install-Module -Name VMware.PowerCLI -Scope AllUsers
+Set-PowerCLIConfiguration -Scope AllUsers -ParticipateInCEIP $false -Confirm:$false

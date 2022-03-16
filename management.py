@@ -173,6 +173,8 @@ def user_stop_vm(token, id):
         if "type" in vm_stop.keys():
             if vm_stop['type'] == "com.vmware.vapi.std.errors.already_in_desired_state":
                 return {"success": False, "message": vm_stop['value']['messages'][0]['default_message']}
+        else:
+            vm_stop['message'] = "VM stopped"
 
         return vm_stop
 
@@ -185,6 +187,8 @@ def user_start_vm(token, id):
         if "type" in vm_start.keys():
             if vm_start['type'] == "com.vmware.vapi.std.errors.already_in_desired_state":
                 return {"success": False, "message": vm_start['value']['messages'][0]['default_message']}
+        else:
+            vm_start['message'] = "VM Started"
 
         return vm_start
 
@@ -197,7 +201,8 @@ def user_reset_vm(token, id):
         if "type" in vm_reset.keys():
             if vm_reset['type'] == "com.vmware.vapi.std.errors.already_in_desired_state":
                 return {"success": False, "message": vm_reset['value']['messages'][0]['default_message']}
-
+        else:
+            vm_reset['message'] = "VM Restarted"
         return vm_reset
 
 def user_suspend_vm(token, id):
@@ -209,6 +214,8 @@ def user_suspend_vm(token, id):
         if "type" in vm_suspend.keys():
             if vm_suspend['type'] == "com.vmware.vapi.std.errors.already_in_desired_state":
                 return {"success": False, "message": vm_suspend['value']['messages'][0]['default_message']}
+        else:
+            vm_suspend['message'] = "VM Suspended"
 
         return vm_suspend
 
@@ -225,9 +232,10 @@ def user_delete_vm(token, id):
         if "type" in vm_deletion.keys():
             if vm_deletion['type'] == "com.vmware.vapi.std.errors.not_allowed_in_current_state":
                 return {"success": False, "message": vm_deletion['value']['messages'][0]['default_message']}
+        else:
+            vm_deletion['message'] = "VM Deleted"
 
-        result = vm_deletion
-        return result
+        return vm_deletion
     else:
         return {"success": False, "message": "Bad / Missing token"}
 
@@ -236,9 +244,15 @@ def user_create_vm(username, password, vm_name, vm_ip="253", vm_gateway="254", v
     return {"success": True, "message": "VM created !"}
 
 def user_backup_vm(username, password, vm_id):
-    script = subprocess.Popen(["pwsh","./sub-scripts/backup-vm.ps1",username,password,vm_name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    return {"success": True, "message": "VM backup success !"}
 
+
+    # f = open("backuplog.txt", "w")
+    # f2 = open("backuplog_err.txt", "w")
+    # script = subprocess.Popen(["pwsh ./sub-scripts/backup-vm.ps1 -vcsa_username "+username+" -vcsa_password "+password+" -vm_id "+vm_id+" "], shell=True,  stdout=f, stderr=f2)
+
+    script = subprocess.Popen(["pwsh","./sub-scripts/backup-vm.ps1",username,password,vm_id], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+    return {"success": True, "message": "VM backup success !"}
 
 if action == "get":
     print(json.dumps(user_get_vms(vcsa_token)))

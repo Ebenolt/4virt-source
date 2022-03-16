@@ -1,7 +1,5 @@
 # Save a user vm
 # ./script.ps1 -vcsa_username USER -vcsa_password PASS -vm_id ID
-
-
 param ($vcsa_username, $vcsa_password, $vm_id)
 
 if ( ($vcsa_username -eq $null) -or ($vcsa_password -eq $null) -or ($vm_id -eq $null)) {
@@ -10,6 +8,7 @@ if ( ($vcsa_username -eq $null) -or ($vcsa_password -eq $null) -or ($vm_id -eq $
         exit 1
 }
 
+Import-Module PsIni
 
 $date = Get-Date -Format "yyyyMMdd"
 $time = Get-Date -f "HH:m:ss"
@@ -49,4 +48,6 @@ $vmView.CloneVM( $cloneFolder, $cloneName, $cloneSpec )
 
 Get-Snapshot -VM (Get-VM -Name $vm_name) -Name $clone_name | Remove-Snapshot -confirm:$False -RunAsync
 
-& ./sub-scripts/mail.ps1 "VM Backup" "VM $vm_name has been backuped at $pretty_date / $time" me@ebenolt.com | out-null
+$end_time = Get-Date -f "HH:m:ss"
+
+& ./sub-scripts/mail.ps1 "VM Backup" "VM $vm_name has been backuped at $pretty_date / $time -> $end_time" me@ebenolt.com | out-null
