@@ -55,9 +55,8 @@ Remove-OSCustomizationSpec WindowsTemp -Confirm:$false | out-null
 
 $port_group = Get-VDPortGroup -Name $uname
 
-Get-VM $vm_name | Get-NetworkAdapter -Name "Network adapter 2" | Set-NetworkAdapter -Portgroup $port_group -Confirm:$false | out-null
+Get-VM $vm_name | Get-NetworkAdapter -Name "Network adapter 2" | Set-NetworkAdapter -Portgroup $port_group -Confirm:$false
 
-Get-VM $vm_name | Get-NetworkAdapter -Name "Network adapter 2" | Set-NetworkAdapter -Connected:$true -Confirm:$false | out-null
-
+Get-VM $vm_name | Get-NetworkAdapter -Name "Network adapter 2" | Set-NetworkAdapter -Connected:$true -Confirm:$false
 
 $vm = Start-VM $vm_name -Confirm:$false | out-null

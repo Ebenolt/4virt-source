@@ -1,3 +1,4 @@
+<link rel="stylesheet" href="style/user-interface.css">
 <h1> VMs :</h1>
 <?php
     $return = [];
@@ -32,6 +33,7 @@
                 </p>
             <p class='actions'>
                 <h4>Actions:</h4>
+                <br>
                 <button type='button' class='vm_power_on' value='<?php echo $vm['id'] ?>'>Turn On</button>
                 <button type='button' class='vm_power_off' value='<?php echo $vm['id'] ?>'>Shutdown</button>
                 <button type='button' class='vm_power_reset' value='<?php echo $vm['id'] ?>'>Restart</button>

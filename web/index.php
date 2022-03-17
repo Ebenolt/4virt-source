@@ -1,7 +1,7 @@
 <?php
     session_start();
     set_include_path("./includes");
-    require_once("general.php");
+    require_once("header.php");
 
     if (key_exists('message', $_SESSION)){
         echo($_SESSION['message']);
