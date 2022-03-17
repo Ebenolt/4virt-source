@@ -1,0 +1,90 @@
+.body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.vm {
+  border: 3px solid #00ceee;
+  border-radius: 5px;
+  width: 30%;
+  display: inline-block;
+  vertical-align: top;
+  margin: 5px;
+  padding: 0.5em 1em 0.5em 1em;
+  background-color: rgba(0, 206, 238, 0.2);
+}
+
+.vm .name {
+  font-size: 1.4em;
+  display: inline;
+}
+
+.vm .id {
+  display: inline;
+  font-size: 0.9em;
+}
+
+.vm .id::before {
+  content: "[ ";
+}
+
+.vm .id::after {
+  content: " ]";
+}
+
+.vm h4 {
+  display: inline;
+}
+
+button {
+  text-transform: uppercase;
+  outline: 0;
+  background: #00ceee;
+  border: 0;
+  padding: 8px;
+  color: #ffffff;
+  font-size: 0.8em;
+  transition: all 0.3 ease;
+  display: inline-block;
+  margin-top: 0.3em;
+}
+
+button:hover {
+  background: #38e0fa;
+}
+
+button:active {
+  background: #1b8fa1;
+  color: #ffffff;
+}
+
+#vm_create {
+  position: fixed;
+  bottom: 1em;
+  right: 2em;
+  width: 15%;
+  border: 1px solid #37d9f1;
+  border-radius: 5px;
+  display: inline-block;
+  padding: 0.5em 1em 0.5em 1em;
+  background-color: rgba(55, 217, 241, 0.1);
+  box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.5);
+}
+
+#vm_create h4 {
+  text-align: center;
+}
+
+#vm_create button {
+  width: 50%;
+  margin-left: 25%;
+}
+
+#vm_create input,
+select {
+  display: block;
+  width: 100%;
+}
+
+/* {} */

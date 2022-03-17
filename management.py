@@ -26,14 +26,15 @@ vm_dns = ''
 howto = 'script.py --username(-u) <vcsa_username> --password(-p) <vcsa_password> --token(-t) <vcsa_token> --action(-a) <action> --element(-e) <element_id>'
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:],"hu:p:t:a:e:n:i:g:d:",["username=","password=", "token=", "action=", "id=", "vm_name=", "vm_ip=", "vm_gateway=", "vm_dns="])
+    opts, args = getopt.getopt(sys.argv[1:], "hu:p:t:a:e:n:i:g:d:", [
+                               "username=", "password=", "token=", "action=", "id=", "vm_name=", "vm_ip=", "vm_gateway=", "vm_dns="])
 
 except getopt.GetoptError:
-    print (howto)
+    print(howto)
     sys.exit(2)
 for opt, arg in opts:
     if opt == '-h':
-        print (howto)
+        print(howto)
         sys.exit()
     elif opt in ("-u", "--username"):
         vcsa_username = arg
@@ -55,7 +56,7 @@ for opt, arg in opts:
         vm_dns = arg
 
 
-if ( '' in [vcsa_username, vcsa_password, vcsa_token, action] ):
+if ('' in [vcsa_username, vcsa_password, vcsa_token, action]):
     print("Missing args, usage:")
     print(howto)
     exit(1)
@@ -101,11 +102,14 @@ def user_valid_token(token):
     else:
         return True
 
+
 def powershell_setup():
-    script = subprocess.Popen(["pwsh","./setup.ps1"])
+    script = subprocess.Popen(["pwsh", "./setup.ps1"])
+
 
 def user_setup(username):
-    script = subprocess.Popen(["pwsh","./user-setup.ps1", username])
+    script = subprocess.Popen(["pwsh", "./user-setup.ps1", username])
+
 
 def user_get_vms(token):
     if(user_valid_token(token)):
@@ -121,8 +125,7 @@ def user_get_vms(token):
                         vcsa_url+"/rest/vcenter/vm/"+vm['vm']+"/guest/identity/", token)['value']['ip_address']
                 except:
                     vm_ip = "Unknown"
-                
-                
+
                 if vm_detail['value']['name'][:3] == "bkp":
                     name_split = vm_detail['value']['name'][3:].split("-")
                     time = name_split[-1]
@@ -136,7 +139,7 @@ def user_get_vms(token):
                     date = date[-2:]+"_"+date[-4:-2]+"_"+date[:4]
                     if not(name in backup_list.keys()):
                         backup_list[name] = []
-                    
+
                     backup_list[name].append(date+"-"+time)
                 else:
                     vm_infos = {"id": vm['vm'],
@@ -149,7 +152,8 @@ def user_get_vms(token):
                                 "networks": []}
                     for net in vm_detail['value']['nics']:
                         try:
-                            vm_infos['networks'].append(net['value']['backing']['network_name'])
+                            vm_infos['networks'].append(
+                                net['value']['backing']['network_name'])
                         except:
                             pass
                     vms_list.append(vm_infos)
@@ -158,11 +162,12 @@ def user_get_vms(token):
         for vm in vms_list:
             if vm["name"] in backup_list.keys():
                 vm["backups"] = backup_list[vm["name"]]
-            
-        result = {"success":True, "message":vms_list}
+
+        result = {"success": True, "message": vms_list}
         return result
     else:
         return {"success": False, "message": "Bad / Missing token"}
+
 
 def user_stop_vm(token, id):
     if(user_valid_token(token)):
@@ -178,6 +183,7 @@ def user_stop_vm(token, id):
 
         return vm_stop
 
+
 def user_start_vm(token, id):
     if(user_valid_token(token)):
         vm_start = api_makerequest(vcsa_url+"/rest/vcenter/vm/"+id+"/power/start",
@@ -192,6 +198,7 @@ def user_start_vm(token, id):
 
         return vm_start
 
+
 def user_reset_vm(token, id):
     if(user_valid_token(token)):
         vm_reset = api_makerequest(vcsa_url+"/rest/vcenter/vm/"+id+"/power/reset",
@@ -204,6 +211,7 @@ def user_reset_vm(token, id):
         else:
             vm_reset['message'] = "VM Restarted"
         return vm_reset
+
 
 def user_suspend_vm(token, id):
     if(user_valid_token(token)):
@@ -218,6 +226,7 @@ def user_suspend_vm(token, id):
             vm_suspend['message'] = "VM Suspended"
 
         return vm_suspend
+
 
 def user_delete_vm(token, id):
     if(user_valid_token(token)):
@@ -239,29 +248,33 @@ def user_delete_vm(token, id):
     else:
         return {"success": False, "message": "Bad / Missing token"}
 
+
 def user_create_vm(username, password, vm_name, vm_ip="253", vm_gateway="254", vm_dns="1.1.1.1"):
-    script = subprocess.Popen(["pwsh","./sub-scripts/create-vm.ps1",username,password,vm_name,vm_ip,vm_gateway,vm_dns], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    return {"success": True, "message": "VM created !"}
+    script = subprocess.Popen(["pwsh", "./sub-scripts/create-vm.ps1", username, password, vm_name,
+                              vm_ip, vm_gateway, vm_dns], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    return {"success": True, "message": "VM created ! Please allow up to 10 minutes for you VM to appear"}
+
 
 def user_backup_vm(username, password, vm_id):
-
 
     # f = open("backuplog.txt", "w")
     # f2 = open("backuplog_err.txt", "w")
     # script = subprocess.Popen(["pwsh ./sub-scripts/backup-vm.ps1 -vcsa_username "+username+" -vcsa_password "+password+" -vm_id "+vm_id+" "], shell=True,  stdout=f, stderr=f2)
 
-    script = subprocess.Popen(["pwsh","./sub-scripts/backup-vm.ps1",username,password,vm_id], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    script = subprocess.Popen(["pwsh", "./sub-scripts/backup-vm.ps1", username,
+                              password, vm_id], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-    return {"success": True, "message": "VM backup success !"}
+    return {"success": True, "message": "VM backup success ! Please allow up to 10 minutes for you VM to appear"}
+
 
 if action == "get":
     print(json.dumps(user_get_vms(vcsa_token)))
 elif action in ["stop", "start", "reset", "suspend", "delete"]:
     if element_id == "":
         result = {"success": False,
-            "message": "Missing arg --id(-i)",
-            "howto":howto
-            }
+                  "message": "Missing arg --id(-i)",
+                  "howto": howto
+                  }
         print(json.dumps(result))
     else:
         if action == "start":
@@ -277,26 +290,27 @@ elif action in ["stop", "start", "reset", "suspend", "delete"]:
 elif action == "create":
     if "" in [vm_name, vm_ip, vm_gateway, vm_dns]:
         result = {"success": False,
-            "message": "Missing args",
-            "howto":howto[:-26] + "--vm_name(-n) <vm_name> --vm_ip(-i) <vm_last_ip_block> --vm_gateway(-g) <gateway_last_ip_block> --vm_dns(-d) <dns_ip>"
-            }
+                  "message": "Missing args",
+                  "howto": howto[:-26] + "--vm_name(-n) <vm_name> --vm_ip(-i) <vm_last_ip_block> --vm_gateway(-g) <gateway_last_ip_block> --vm_dns(-d) <dns_ip>"
+                  }
         print(json.dumps(result))
     else:
-        result = user_create_vm(vcsa_username, vcsa_password, vm_name ,vm_ip, vm_gateway, vm_dns)
+        result = user_create_vm(
+            vcsa_username, vcsa_password, vm_name, vm_ip, vm_gateway, vm_dns)
         print(json.dumps(result))
 elif action == "backup":
     if element_id == "":
         result = {"success": False,
-            "message": "Missing args",
-            "howto":howto
-            }
+                  "message": "Missing args",
+                  "howto": howto
+                  }
         print(json.dumps(result))
     else:
         result = user_backup_vm(vcsa_username, vcsa_password, element_id)
         print(json.dumps(result))
 else:
     result = {"success": False,
-                "message": "Action arg not recognized (start, stop, reset, suspend, delete, create)",
-                "howto":howto
-                }
+              "message": "Action arg not recognized (start, stop, reset, suspend, delete, create)",
+              "howto": howto
+              }
     print(json.dumps(result))
